@@ -26,6 +26,7 @@ import {
   setDoc,
   getDocs,
   onSnapshot,
+  writeBatch,
 } from 'firebase/firestore';
 
 interface FabricStoreContextType {
@@ -694,8 +695,19 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setRolls(prev => prev.map(r => (r.id === rollId ? { ...r, qualityStatus: status } : r)));
   };
 
-  const resetToInitialData = () => {
+  const resetToInitialData = async () => {
     if (confirm('Are you sure you want to restore original seed data? This will reset all current transactions.')) {
+      // Clear Firestore collections
+      const collectionsToClear = ['pos', 'rolls', 'receives', 'issues', 'racks'];
+      for (const colName of collectionsToClear) {
+        const snapshot = await getDocs(collection(db, colName));
+        if (!snapshot.empty) {
+          const batch = writeBatch(db);
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+        }
+      }
+
       setUsers(INITIAL_USERS);
       setCurrentUserId(INITIAL_USERS[0].id);
       setIsAuthenticated(true);
