@@ -28,6 +28,7 @@ import {
   onSnapshot,
   writeBatch,
   addDoc,
+  getDoc,
 } from 'firebase/firestore';
 
 interface FabricStoreContextType {
@@ -107,6 +108,7 @@ interface FabricStoreContextType {
   resetToInitialData: () => Promise<void>;
   createBackup: () => Promise<void>;
   restoreFromBackup: (backupId: string) => Promise<void>;
+  listBackups: () => Promise<any[]>;
 
   // Computed metrics
   stats: {
@@ -706,26 +708,43 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
     await addDoc(collection(db, 'backups'), backup);
   };
 
+  const listBackups = async () => {
+    const querySnapshot = await getDocs(collection(db, 'backups'));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  };
+
   const restoreFromBackup = async (backupId: string) => {
-    // Implement restore logic...
-    console.log('Restoring from backup:', backupId);
+    if (!confirm('Are you sure you want to restore from this backup? This will overwrite current data.')) return;
+    const backupDoc = await getDoc(doc(db, 'backups', backupId));
+    if (!backupDoc.exists()) return;
+    const { data } = backupDoc.data() as { data: { pos: any[], rolls: any[], receives: any[], issues: any[] } };
+
+    const batch = writeBatch(db);
+    // Clear existing
+    const collectionsToClear = ['pos', 'rolls', 'receives', 'issues'];
+    for (const colName of collectionsToClear) {
+      const snapshot = await getDocs(collection(db, colName));
+      snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    }
+    // Restore
+    data.pos.forEach(p => batch.set(doc(db, 'pos', p.id), p));
+    data.rolls.forEach(r => batch.set(doc(db, 'rolls', r.id), r));
+    data.receives.forEach(rcv => batch.set(doc(db, 'receives', rcv.id), rcv));
+    data.issues.forEach(iss => batch.set(doc(db, 'issues', iss.id), iss));
+
+    await batch.commit();
   };
 
   const resetToInitialData = async () => {
     if (confirm('Are you sure you want to reset to an empty factory? This will clear all transactions. A backup will be created.')) {
-      // Create backup before clearing
       await createBackup();
-
-      // Clear Firestore collections
       const collectionsToClear = ['pos', 'rolls', 'receives', 'issues'];
+      const batch = writeBatch(db);
       for (const colName of collectionsToClear) {
         const snapshot = await getDocs(collection(db, colName));
-        if (!snapshot.empty) {
-          const batch = writeBatch(db);
-          snapshot.docs.forEach(doc => batch.delete(doc.ref));
-          await batch.commit();
-        }
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
       }
+      await batch.commit();
 
       setPos([]);
       setRolls([]);
@@ -738,6 +757,19 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
       localStorage.removeItem(STORAGE_KEYS.ISSUES);
     }
   };
+
+  // Automated daily backup check
+  useEffect(() => {
+    const checkDailyBackup = async () => {
+      const today = new Date().toDateString();
+      const backups = await listBackups();
+      const hasBackupToday = backups.some((b: any) => new Date(b.timestamp).toDateString() === today);
+      if (!hasBackupToday) {
+        await createBackup();
+      }
+    };
+    checkDailyBackup();
+  }, []);
 
   // Compute live warehouse stats
   const now = new Date();
@@ -816,6 +848,7 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
         resetToInitialData,
         createBackup,
         restoreFromBackup,
+        listBackups,
         stats,
       }}
     >
