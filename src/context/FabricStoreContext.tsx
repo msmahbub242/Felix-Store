@@ -188,7 +188,7 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const loaded = snapshot.docs.map(doc => doc.data() as PurchaseOrder);
             setPos(loaded);
           } else {
-            INITIAL_POS.forEach(p => setDoc(doc(db, 'pos', p.id), p).catch(e => console.log(e)));
+            setPos([]);
           }
         },
         error => console.error('Firestore pos error:', error)
@@ -201,7 +201,7 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const loaded = snapshot.docs.map(doc => doc.data() as FabricRoll);
             setRolls(loaded);
           } else {
-            INITIAL_ROLLS.forEach(r => setDoc(doc(db, 'rolls', r.id), r).catch(e => console.log(e)));
+            setRolls([]);
           }
         },
         error => console.error('Firestore rolls error:', error)
@@ -214,7 +214,7 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const loaded = snapshot.docs.map(doc => doc.data() as FabricReceiveRecord);
             setReceives(loaded.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
           } else {
-            INITIAL_RECEIVES.forEach(rcv => setDoc(doc(db, 'receives', rcv.id), rcv).catch(e => console.log(e)));
+            setReceives([]);
           }
         },
         error => console.error('Firestore receives error:', error)
@@ -227,7 +227,7 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const loaded = snapshot.docs.map(doc => doc.data() as FabricIssueRecord);
             setIssues(loaded.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
           } else {
-            INITIAL_ISSUES.forEach(iss => setDoc(doc(db, 'issues', iss.id), iss).catch(e => console.log(e)));
+            setIssues([]);
           }
         },
         error => console.error('Firestore issues error:', error)
@@ -240,7 +240,7 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const loaded = snapshot.docs.map(doc => doc.data() as WarehouseRack);
             setRacks(loaded);
           } else {
-            INITIAL_RACKS.forEach(rack => setDoc(doc(db, 'racks', rack.id), rack).catch(e => console.log(e)));
+            setRacks([]);
           }
         },
         error => console.error('Firestore racks error:', error)
