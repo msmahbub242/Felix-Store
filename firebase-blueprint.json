@@ -1,0 +1,137 @@
+{
+  "entities": {
+    "purchaseOrder": {
+      "title": "Purchase Order",
+      "description": "Textile fabric purchase order details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "poNumber": { "type": "string" },
+        "style": { "type": "string" },
+        "buyer": { "type": "string" },
+        "item": { "type": "string" },
+        "orderQty": { "type": "number" },
+        "unit": { "type": "string", "enum": ["KG", "YARDS"] },
+        "season": { "type": "string" },
+        "supplier": { "type": "string" },
+        "orderDate": { "type": "string" },
+        "deliveryDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Receiving", "Completed", "Closed"] },
+        "remarks": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "poNumber", "style", "buyer", "item", "orderQty", "unit", "orderDate", "deliveryDate", "status", "createdAt"]
+    },
+    "fabricRoll": {
+      "title": "Fabric Roll",
+      "description": "Individual fabric roll inventory record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "poId": { "type": "string" },
+        "poNumber": { "type": "string" },
+        "rollNo": { "type": "string" },
+        "rollIndex": { "type": "number" },
+        "receivingId": { "type": "string" },
+        "receiveDate": { "type": "string" },
+        "challanNo": { "type": "string" },
+        "supplier": { "type": "string" },
+        "buyer": { "type": "string" },
+        "style": { "type": "string" },
+        "item": { "type": "string" },
+        "color": { "type": "string" },
+        "fabricType": { "type": "string" },
+        "gsm": { "type": "number" },
+        "lotNo": { "type": "string" },
+        "originalWeight": { "type": "number" },
+        "currentWeight": { "type": "number" },
+        "rackNo": { "type": "string" },
+        "width": { "type": "string" },
+        "qualityStatus": { "type": "string" },
+        "stockStatus": { "type": "string" },
+        "remarks": { "type": "string" }
+      },
+      "required": ["id", "poId", "poNumber", "rollNo", "rollIndex", "receivingId", "color", "fabricType", "gsm", "lotNo", "originalWeight", "currentWeight", "rackNo", "qualityStatus", "stockStatus"]
+    },
+    "fabricReceiveRecord": {
+      "title": "Fabric Receive Record",
+      "description": "Batch fabric receiving challan record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "receivingDate": { "type": "string" },
+        "challanNo": { "type": "string" },
+        "poId": { "type": "string" },
+        "poNumber": { "type": "string" },
+        "supplier": { "type": "string" },
+        "buyer": { "type": "string" },
+        "style": { "type": "string" },
+        "item": { "type": "string" },
+        "totalWeight": { "type": "number" },
+        "rollCount": { "type": "number" },
+        "receivedBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "receivingDate", "challanNo", "poNumber", "supplier", "totalWeight", "rollCount", "receivedBy", "createdAt"]
+    },
+    "fabricIssueRecord": {
+      "title": "Fabric Issue Record",
+      "description": "Fabric issue slip record for cutting or floor requisition",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "issueSlipNo": { "type": "string" },
+        "poId": { "type": "string" },
+        "poNumber": { "type": "string" },
+        "buyer": { "type": "string" },
+        "style": { "type": "string" },
+        "item": { "type": "string" },
+        "issuedTo": { "type": "string" },
+        "issuedBy": { "type": "string" },
+        "purpose": { "type": "string" },
+        "totalIssuedWeight": { "type": "number" },
+        "rollsCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "issueDate", "issueSlipNo", "poNumber", "issuedTo", "issuedBy", "purpose", "totalIssuedWeight", "rollsCount", "createdAt"]
+    },
+    "warehouseRack": {
+      "title": "Warehouse Rack",
+      "description": "Warehouse rack location and capacity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "zone": { "type": "string" },
+        "aisle": { "type": "string" },
+        "tier": { "type": "string" },
+        "capacityKg": { "type": "number" },
+        "maxRolls": { "type": "number" }
+      },
+      "required": ["id", "name", "zone", "capacityKg", "maxRolls"]
+    }
+  },
+  "firestore": {
+    "/pos/{poId}": {
+      "schema": "purchaseOrder",
+      "description": "Purchase orders placed for fabric manufacturing"
+    },
+    "/rolls/{rollId}": {
+      "schema": "fabricRoll",
+      "description": "Fabric rolls received in warehouse"
+    },
+    "/receives/{receiveId}": {
+      "schema": "fabricReceiveRecord",
+      "description": "Fabric delivery challan receive logs"
+    },
+    "/issues/{issueId}": {
+      "schema": "fabricIssueRecord",
+      "description": "Fabric issue slips logged to floor"
+    },
+    "/racks/{rackId}": {
+      "schema": "warehouseRack",
+      "description": "Storage rack locations in the fabric store"
+    }
+  }
+}
