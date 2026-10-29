@@ -27,6 +27,7 @@ import {
   getDocs,
   onSnapshot,
   writeBatch,
+  addDoc,
 } from 'firebase/firestore';
 
 interface FabricStoreContextType {
