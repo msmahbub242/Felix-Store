@@ -686,6 +686,11 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const addRack = (rack: WarehouseRack) => {
     setRacks(prev => [...prev, rack]);
+    try {
+      setDoc(doc(db, 'racks', rack.id), rack);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const updateRack = (id: string, rackUpdate: Partial<WarehouseRack>) => {

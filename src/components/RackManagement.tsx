@@ -15,7 +15,7 @@ import {
 import { RollLabelModal } from './RollLabelModal';
 
 export const RackManagement: React.FC = () => {
-  const { racks, rolls, addRack, transferRollRack, hasPermission } = useFabricStore();
+  const { racks, rolls, addRack, updateRack, transferRollRack, hasPermission } = useFabricStore();
   const canManageRacks = hasPermission('canManageRacks');
 
   const [selectedRack, setSelectedRack] = useState<WarehouseRack | null>(racks[0] || null);
