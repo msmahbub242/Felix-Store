@@ -690,6 +690,10 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const updateRack = (id: string, rackUpdate: Partial<WarehouseRack>) => {
     setRacks(prev => prev.map(r => (r.id === id ? { ...r, ...rackUpdate } : r)));
+    const updatedRack = racks.find(r => r.id === id);
+    if (updatedRack) {
+      setDoc(doc(db, 'racks', id), { ...updatedRack, ...rackUpdate }, { merge: true });
+    }
   };
 
   const transferRollRack = (rollId: string, targetRackNo: string) => {

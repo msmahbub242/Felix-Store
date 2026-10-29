@@ -20,11 +20,13 @@ export const RackManagement: React.FC = () => {
 
   const [selectedRack, setSelectedRack] = useState<WarehouseRack | null>(racks[0] || null);
   const [isAddRackModalOpen, setIsAddRackModalOpen] = useState(false);
+  const [isEditRackModalOpen, setIsEditRackModalOpen] = useState(false);
+  const [editingRack, setEditingRack] = useState<WarehouseRack | null>(null);
   const [transferModalRoll, setTransferModalRoll] = useState<FabricRoll | null>(null);
   const [targetRackNo, setTargetRackNo] = useState(racks[0]?.name || '');
   const [labelRoll, setLabelRoll] = useState<FabricRoll | null>(null);
 
-  // New Rack Form
+  // Rack Forms
   const [newRackName, setNewRackName] = useState('');
   const [newRackZone, setNewRackZone] = useState('Zone A - Single Jersey');
   const [newRackCapacity, setNewRackCapacity] = useState(2500);
@@ -48,6 +50,21 @@ export const RackManagement: React.FC = () => {
     setNewRackName('');
   };
 
+  const handleEditRackSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRack) return;
+
+    updateRack(editingRack.id, {
+      name: newRackName,
+      zone: newRackZone,
+      capacityKg: newRackCapacity,
+      maxRolls: newRackMaxRolls,
+    });
+
+    setIsEditRackModalOpen(false);
+    setEditingRack(null);
+  };
+
   const handleExecuteTransfer = () => {
     if (!transferModalRoll || !targetRackNo) return;
     transferRollRack(transferModalRoll.id, targetRackNo);
@@ -65,7 +82,7 @@ export const RackManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Warehouse Rack &amp; Location Control</h1>
+          <h1 className="text-[33px] font-bold tracking-tight text-white bg-[#0074ff] p-4 rounded">Warehouse Rack &amp; Location Control</h1>
           <p className="text-xs text-slate-500 mt-1">
             Monitor real-time rack occupancy, transfer rolls between warehouse bins, and manage physical storage zones.
           </p>
@@ -101,7 +118,7 @@ export const RackManagement: React.FC = () => {
             <div
               key={rack.id}
               onClick={() => setSelectedRack(rack)}
-              className={`p-4 rounded-xl border cursor-pointer transition-all ${
+              className={`p-4 rounded-xl border border-[#006cff] cursor-pointer transition-all ${
                 isSelected
                   ? 'bg-white border-slate-900 ring-2 ring-slate-900/10 shadow-md'
                   : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
@@ -109,7 +126,18 @@ export const RackManagement: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-mono font-bold text-slate-900 text-base">{rack.name}</span>
-                <span className="text-xs font-mono font-bold text-slate-600">{utilizationPct}%</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-slate-600">{utilizationPct}%</span>
+                    <button onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setEditingRack(rack); 
+                      setNewRackName(rack.name); 
+                      setNewRackZone(rack.zone); 
+                      setNewRackCapacity(rack.capacityKg); 
+                      setNewRackMaxRolls(rack.maxRolls); 
+                      setIsEditRackModalOpen(true); 
+                    }} className="text-blue-600 text-[10px] font-bold">Edit</button>
+                </div>
               </div>
 
               <div className="text-[11px] text-slate-500 truncate mb-3">{rack.zone}</div>
@@ -398,8 +426,183 @@ export const RackManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Label Modal */}
-      {labelRoll && <RollLabelModal roll={labelRoll} onClose={() => setLabelRoll(null)} />}
+        {isAddRackModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+                <h3 className="font-semibold text-slate-900">Add New Storage Rack</h3>
+                <button
+                  onClick={() => setIsAddRackModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddRackSubmit} className="p-6 space-y-4 text-xs">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Rack Name / Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rack E-01"
+                    value={newRackName}
+                    onChange={e => setNewRackName(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Storage Zone Classification
+                  </label>
+                  <input
+                    type="text"
+                    value={newRackZone}
+                    onChange={e => setNewRackZone(e.target.value)}
+                    placeholder="e.g. Zone A - Single Jersey"
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Capacity (KG)
+                    </label>
+                    <input
+                      type="number"
+                      min={100}
+                      value={newRackCapacity}
+                      onChange={e => setNewRackCapacity(Number(e.target.value))}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Max Rolls
+                    </label>
+                    <input
+                      type="number"
+                      min={10}
+                      value={newRackMaxRolls}
+                      onChange={e => setNewRackMaxRolls(Number(e.target.value))}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddRackModalOpen(false)}
+                    className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 rounded-lg hover:bg-slate-800"
+                  >
+                    Create Rack
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        
+        {isEditRackModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+              <h3 className="font-semibold text-slate-900">Edit Storage Rack</h3>
+              <button
+                onClick={() => setIsEditRackModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditRackSubmit} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Rack Name / Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rack E-01"
+                  value={newRackName}
+                  onChange={e => setNewRackName(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Storage Zone Classification
+                </label>
+                <input
+                  type="text"
+                  value={newRackZone}
+                  onChange={e => setNewRackZone(e.target.value)}
+                  placeholder="e.g. Zone A - Single Jersey"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Capacity (KG)
+                  </label>
+                  <input
+                    type="number"
+                    min={100}
+                    value={newRackCapacity}
+                    onChange={e => setNewRackCapacity(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Max Rolls
+                  </label>
+                  <input
+                    type="number"
+                    min={10}
+                    value={newRackMaxRolls}
+                    onChange={e => setNewRackMaxRolls(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setIsEditRackModalOpen(false)}
+                  className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 rounded-lg hover:bg-slate-800"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        )}
+        {labelRoll && <RollLabelModal roll={labelRoll} onClose={() => setLabelRoll(null)} />}
+
     </div>
   );
 };
