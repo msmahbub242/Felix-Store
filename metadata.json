@@ -1,0 +1,8 @@
+{
+  "name": "FELIX STORE - Fabric Store \u0026 Warehouse Management",
+  "description": "Professional textile \u0026 garment fabric store management system featuring PO Master, multi-batch roll receiving with auto-serial increment, full \u0026 partial roll issuing, rack management, and slow-moving inventory analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
