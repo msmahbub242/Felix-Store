@@ -110,6 +110,17 @@
         "maxRolls": { "type": "number" }
       },
       "required": ["id", "name", "zone", "capacityKg", "maxRolls"]
+    },
+    "backup": {
+      "title": "Backup",
+      "description": "Database state backup",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "data": { "type": "object" }
+      },
+      "required": ["id", "timestamp", "data"]
     }
   },
   "firestore": {
@@ -132,6 +143,10 @@
     "/racks/{rackId}": {
       "schema": "warehouseRack",
       "description": "Storage rack locations in the fabric store"
+    },
+    "/backups/{backupId}": {
+      "schema": "backup",
+      "description": "Database snapshots for restoration"
     }
   }
 }

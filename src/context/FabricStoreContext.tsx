@@ -103,7 +103,9 @@ interface FabricStoreContextType {
   updateRack: (id: string, rack: Partial<WarehouseRack>) => void;
   transferRollRack: (rollId: string, targetRackNo: string) => void;
   updateRollStatus: (rollId: string, status: QualityStatus) => void;
-  resetToInitialData: () => void;
+  resetToInitialData: () => Promise<void>;
+  createBackup: () => Promise<void>;
+  restoreFromBackup: (backupId: string) => Promise<void>;
 
   // Computed metrics
   stats: {
@@ -695,10 +697,26 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setRolls(prev => prev.map(r => (r.id === rollId ? { ...r, qualityStatus: status } : r)));
   };
 
+  const createBackup = async () => {
+    const backup = {
+      timestamp: new Date().toISOString(),
+      data: { pos, rolls, receives, issues }
+    };
+    await addDoc(collection(db, 'backups'), backup);
+  };
+
+  const restoreFromBackup = async (backupId: string) => {
+    // Implement restore logic...
+    console.log('Restoring from backup:', backupId);
+  };
+
   const resetToInitialData = async () => {
-    if (confirm('Are you sure you want to restore original seed data? This will reset all current transactions.')) {
+    if (confirm('Are you sure you want to reset to an empty factory? This will clear all transactions. A backup will be created.')) {
+      // Create backup before clearing
+      await createBackup();
+
       // Clear Firestore collections
-      const collectionsToClear = ['pos', 'rolls', 'receives', 'issues', 'racks'];
+      const collectionsToClear = ['pos', 'rolls', 'receives', 'issues'];
       for (const colName of collectionsToClear) {
         const snapshot = await getDocs(collection(db, colName));
         if (!snapshot.empty) {
@@ -708,21 +726,15 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
       }
 
-      setUsers(INITIAL_USERS);
-      setCurrentUserId(INITIAL_USERS[0].id);
-      setIsAuthenticated(true);
-      localStorage.setItem(STORAGE_KEYS.AUTH_SESSION, INITIAL_USERS[0].id);
-      setPos(INITIAL_POS);
-      setRolls(INITIAL_ROLLS);
-      setReceives(INITIAL_RECEIVES);
-      setIssues(INITIAL_ISSUES);
-      setRacks(INITIAL_RACKS);
+      setPos([]);
+      setRolls([]);
+      setReceives([]);
+      setIssues([]);
+      
       localStorage.removeItem(STORAGE_KEYS.POS);
       localStorage.removeItem(STORAGE_KEYS.ROLLS);
       localStorage.removeItem(STORAGE_KEYS.RECEIVES);
       localStorage.removeItem(STORAGE_KEYS.ISSUES);
-      localStorage.removeItem(STORAGE_KEYS.RACKS);
-      localStorage.removeItem(STORAGE_KEYS.USERS);
     }
   };
 
@@ -801,6 +813,8 @@ export const FabricStoreProvider: React.FC<{ children: React.ReactNode }> = ({ c
         transferRollRack,
         updateRollStatus,
         resetToInitialData,
+        createBackup,
+        restoreFromBackup,
         stats,
       }}
     >

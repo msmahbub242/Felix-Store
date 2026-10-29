@@ -1,8 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Basic admin check - in a real app, this should be more robust.
+    // For now, assuming email/id is known or we skip strict auth.
+    function isSignedIn() { return request.auth != null; }
+    
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if isSignedIn();
+    }
+    
+    match /backups/{backupId} {
+      allow read, write: if isSignedIn(); // Add stricter checks if roles implemented
     }
   }
 }
